@@ -32,6 +32,4 @@ puts "--"
 puts find_with_lambda "Ruby"
 
 
-puts "Lond" <=> "London"
-puts "London" <=> "Lond"
-puts "Foo" <=> "London"
+puts "nil"w.nil?
