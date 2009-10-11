@@ -3,9 +3,10 @@ require 'not_my_child_error'
 
 module RadixTree
   class Node
-    def initialize name,children=[]
+    def initialize name,children=[],is_surrogate_parent=false
       @children = children
       @name = name
+      @is_surrogate_parent=is_surrogate_parent
     end
 
     def has_no_children?
@@ -48,7 +49,7 @@ module RadixTree
 
     def fork_a_new_parent_and_add_to_children existing_child,new_child
       new_parent = existing_child.fork_a_new_parent_and_add new_child
-      
+
       disown_existing_child existing_child
       
       add_new_child new_parent
@@ -67,8 +68,9 @@ module RadixTree
 
     protected
     def is_sibling_of_new_child_to_be_added? other,parent
+      
       common_beginning_name = common_beginning_in_name other.name
-      return false if common_beginning_name.nil?
+      return false if common_beginning_name.nil? || common_beginning_name.empty?
       
       common_beginning_name.chomp!(separator=' ')
       new_found_parent = Node.new common_beginning_name
@@ -81,7 +83,8 @@ module RadixTree
     end
 
     def fork_a_new_parent_and_add child
-      new_parent=Node.new @name.common_beginning child.name
+      new_parent=Node.new @name.common_beginning(child.name),[],true
+      
       new_parent.accept_as_own_child child
       new_parent.accept_as_own_child self
       new_parent
@@ -93,7 +96,8 @@ module RadixTree
 
     private
     def common_beginning_in_name other_name
-      return @name.common_beginning other_name
+      common_beginning = @name.common_beginning other_name
+      common_beginning
     end
 
     def names_have_a_common_beginning? other_name
@@ -131,19 +135,31 @@ module RadixTree
     end
 
     def search_for node_name
-
-      if node_name.starts_with @name
+      node_being_searched_for = Node.new node_name
+      
+      if self == node_being_searched_for
         return add_me_and_my_descendants
       end
 
+      @children.each do |child|
+        if child.is_really_my_child? node_being_searched_for
+          return child.search_for node_name
+        end
+      end
+    end
+
+    private
+    def am_not_a_surrogate_parent
+      !@is_surrogate_parent
     end
 
     protected
     def add_me_and_my_descendants
-      me_and_my_descendants = [self]
+      me_and_my_descendants = []
+      me_and_my_descendants << self if am_not_a_surrogate_parent
 
       @children.each do |child|
-        me_and_my_descendants.concat(child.add_me_and_my_descendants)
+        me_and_my_descendants.concat child.add_me_and_my_descendants
       end
 
       return me_and_my_descendants

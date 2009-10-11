@@ -2,6 +2,7 @@ $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 
 require 'test/unit'
 require 'node'
+require 'root'
 
 module RadixTree
   class NodeTest < Test::Unit::TestCase
@@ -115,19 +116,139 @@ module RadixTree
       assert london.has_child Node.new "London B"
     end
 
+    def test_root_node_should_accept_all_as_its_own_children
+
+      root = Root.new "root"
+      root.add Node.new "London"
+      root.add Node.new "Njeliyanparambu"
+
+      assert root.has_child Node.new "London"
+      assert root.has_child Node.new "Njeliyanparambu"
+    end
+
     def test_search_for_parent_should_yield_parent_and_all_descendants
+      root = Root.new "root"
 
       london = Node.new "London"
-      london.add Node.new "London B"
-      london.add Node.new "London Bridge"
+      root.add london
+      
+      root.add Node.new "London B"
+      root.add Node.new "London Bridge"
+      root.add Node.new "London Kings Cross"
 
-      results = london.search_for "London"
+      results = root.search_for "London"
+
+      assert !results.nil?, "Expected London, London B and London Bridge to be found by this search"
       results.each{|result| puts "found:#{result}"}
 
-      assert_equal 3, results.size, "Expected only three elements to be found"
+      assert_equal 4, results.size, "Expected only three elements to be found"
       assert_equal Node.new("London"), results[0], "Expected first element to be London"
-      assert_equal Node.new("London B"), results[1], "Expected first element to be London"
-      assert_equal Node.new("London Bridge"), results[2], "Expected first element to be London"
+      assert_equal Node.new("London B"), results[1], "Expected second element to be London B"
+      assert_equal Node.new("London Bridge"), results[2], "Expected third element to be London Bridge"
+      assert_equal Node.new("London Kings Cross"), results[3], "Expected fourth element to be London Kings Cross"
+    end
+
+
+    def test_search_should_only_return_matching_child_and_descendants_and_not_ancestors
+      root = Root.new "root"
+
+      root.add Node.new "London"
+      root.add Node.new "London Blackfriars"
+      root.add Node.new "London Bridge"
+      
+      root.add Node.new "London Cannon Street"
+      root.add Node.new "London Charing Cross"
+      root.add Node.new "London Euston"
+      root.add Node.new "London Fenchuch Street"
+      root.add Node.new "London Fields"
+      
+      root.add Node.new "London Kings Cross"
+      root.add Node.new "Cadoxton"
+      root.add Node.new "Caergwrle"
+
+      results = root.search_for "London C"
+      results.each{|result| puts "search_results:#{result}"}
+      
+      assert results.include? Node.new "London Cannon Street"
+      assert results.include? Node.new "London Charing Cross"
+    end
+
+    def test_search_should_find_only_the_correct_number_of_nodes
+      root = Root.new "root"
+
+      root.add Node.new "London"
+      root.add Node.new "London Blackfriars"
+      root.add Node.new "London Bridge"
+
+      root.add Node.new "London Cannon Street"
+      root.add Node.new "London Charing Cross"
+      root.add Node.new "London Euston"
+      root.add Node.new "London Fenchuch Street"
+      root.add Node.new "London Fields"
+
+      root.add Node.new "London Kings Cross"
+      root.add Node.new "Cadoxton"
+      root.add Node.new "Caergwrle"
+
+      results = root.search_for "London C"
+      results.each{|result| puts "search_results:#{result}"}
+
+      assert_equal 2, results.size, "Expected only London Cannon Street and London Charing Cross to be found"
+    end
+
+    def test_search_should_not_return_any_surrogate_parents
+      root = Root.new "root"
+
+      root.add Node.new "London"
+      root.add Node.new "London Blackfriars"
+      root.add Node.new "London Bridge"
+
+      root.add Node.new "London Cannon Street"
+      root.add Node.new "London Charing Cross"
+      root.add Node.new "London Euston"
+      root.add Node.new "London Fenchuch Street"
+      root.add Node.new "London Fields"
+
+      root.add Node.new "London Kings Cross"
+      root.add Node.new "Cadoxton"
+      root.add Node.new "Caergwrle"
+
+      results = root.search_for "London C"
+      results.each{|result| puts "search_results:#{result}"}
+
+      assert !results.include?(Node.new "London C")
+    end
+
+    def test_search_should_return_top_level_node_and_all_children
+      root = Root.new "root"
+
+      root.add Node.new "London"
+      root.add Node.new "London Blackfriars"
+      root.add Node.new "London Bridge"
+      root.add Node.new "London Cannon Street"
+      root.add Node.new "London Charing Cross"
+      root.add Node.new "London Euston"
+      root.add Node.new "London Fenchuch Street"
+      root.add Node.new "London Fields"
+      root.add Node.new "London Kings Cross"
+      
+      root.add Node.new "Cadoxton"
+      root.add Node.new "Caergwrle"
+
+      results = root.search_for "London"
+      results.each{|result| puts "search_results:#{result}"}
+
+      assert results.include? Node.new "London"
+      assert results.include? Node.new "London Blackfriars"
+      assert results.include? Node.new "London Bridge"
+      assert results.include? Node.new "London Cannon Street"
+      assert results.include? Node.new "London Charing Cross"
+      assert results.include? Node.new "London Euston"
+      assert results.include? Node.new "London Fenchuch Street"
+      assert results.include? Node.new "London Fields"
+      assert results.include? Node.new "London Kings Cross"
+
+      assert !results.include?(Node.new "Cadoxton")
     end
   end
 end
