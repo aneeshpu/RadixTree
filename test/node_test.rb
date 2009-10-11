@@ -35,22 +35,6 @@ module RadixTree
       assert("London" == london.to_s)
     end
 
-#    def test_should_produce_readable_representation_of_tree
-#      london = Node.new "London"
-#
-#      london_bridge = Node.new "London Bridge"
-#      london_bridge.add Node.new "London Bridge Falling"
-#
-#      puts london_bridge.tree_string
-#
-#      london.add london_bridge
-#      london.add Node.new "London Cannon Street"
-#
-#      puts london.tree_string
-#
-#      assert "London\t\n|\n|__London Bridge\n|\n|__London Cannon Street" == london.tree_string
-#    end
-
     def test_should_identify_already_added_child
 
       london = Node.new "London"
